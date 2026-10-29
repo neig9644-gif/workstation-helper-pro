@@ -1,4 +1,4 @@
-name: Build Workstation Helper APK
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -8,27 +8,34 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Extract source ZIP
+        run: unzip -o beef_master_android_project.zip
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Extract source
-        run: unzip -o workstation_helper_prototype.zip
-
       - name: Build APK
-        working-directory: workstation_helper
+        working-directory: beef_master_android
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: workstation-helper-apk
-          path: workstation_helper/app/build/outputs/apk/debug/*.apk
+          name: helper-app-apk
+          path: beef_master_android/app/build/outputs/apk/debug/*.apk

@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Workstation Helper APK
 
 on:
   workflow_dispatch:
@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract source ZIP
-        run: unzip -o beef_master_android_project.zip
+      - name: Extract project
+        run: unzip -o workstation_helper_prototype.zip -d source
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -31,11 +31,17 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build APK
-        working-directory: beef_master_android
-        run: gradle assembleDebug
+        run: |
+          PROJECT_DIR=$(find source -name settings.gradle -o -name settings.gradle.kts | head -n 1 | xargs dirname)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "找不到 Android 项目的 Gradle 配置"
+            exit 1
+          fi
+          gradle -p "$PROJECT_DIR" assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: helper-app-apk
-          path: beef_master_android/app/build/outputs/apk/debug/*.apk
+          name: workstation-helper-apk
+          path: source/**/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

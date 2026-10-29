@@ -31,6 +31,9 @@ jobs:
           v.write_text(old, encoding="utf-8")
           PY
       - name: Extract source ZIP
+            - name: Find Android resource files
+        run: |
+          find . -name "accessibility_config.xml"
         run: unzip -o workstation_helper_prototype.zip
 
       - uses: actions/setup-java@v4

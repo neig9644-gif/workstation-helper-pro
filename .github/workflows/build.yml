@@ -14,9 +14,34 @@ jobs:
       - name: Extract source ZIP
         run: unzip -o workstation_helper_prototype.zip
 
-      - name: Find Android resource files
+      - name: Fix Android resources
         run: |
-          find . -name "accessibility_config.xml"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("workstation_helper/app/src/main/res/xml/accessibility_config.xml")
+          s = p.read_text(encoding="utf-8")
+          s, n = re.subn(
+              r'android:description="[^"]*"',
+              'android:description="@string/accessibility_service_description"',
+              s,
+              count=1
+          )
+          if n != 1:
+              raise SystemExit("没有找到 description 属性")
+          p.write_text(s, encoding="utf-8")
+
+          v = Path("workstation_helper/app/src/main/res/values/strings.xml")
+          v.parent.mkdir(parents=True, exist_ok=True)
+          old = v.read_text(encoding="utf-8") if v.exists() else "<resources>\n</resources>\n"
+          if 'name="accessibility_service_description"' not in old:
+              old = old.replace(
+                  "</resources>",
+                  '<string name="accessibility_service_description">用于在用户授权后辅助点击游戏界面。不会修改游戏数据或绕过反作弊。</string>\n</resources>'
+              )
+          v.write_text(old, encoding="utf-8")
+          PY
 
       - uses: actions/setup-java@v4
         with:
